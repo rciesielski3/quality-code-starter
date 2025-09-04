@@ -22,7 +22,7 @@ export default [
       },
       parserOptions: {
         project: ['./tsconfig.eslint.json'],
-        tsconfigRootDir: import.meta.dirname,
+        tsconfigRootDir: process.cwd(),
       },
     },
     rules: {
