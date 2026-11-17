@@ -1,229 +1,113 @@
 # Quality Code Starter
 
-A lean, **production-grade** starter focused on code **quality**, **consistency**, and **maintainability**.  
-Curated like a senior QA/Software Engineer would: opinionated linting, predictable formatting, and CI-ready defaults.
+[![CI](https://github.com/rciesielski3/quality-code-starter/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/rciesielski3/quality-code-starter/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
----
-
-## Why this exists
-
-- Catch risky patterns early (type-aware ESLint).
-- Eliminate formatting noise with Prettier.
-- Make reviews faster and PRs smaller.
-- Offer a single command to lint, format, and type-check locally and in CI.
-
----
+Strict TypeScript starter with one local and CI quality gate: format, type-aware lint, typecheck, tests with coverage, commit and secret checks.
 
 ## Quick Start
 
-```bash
-# Install deps
-npm i   # or: pnpm i / yarn
+Prerequisites:
 
-# Check everything
-npm verify
+- Node 22 (`.nvmrc`).
+- pnpm 9 (see `packageManager` in `package.json`); `corepack enable` provides it.
+- [gitleaks](https://github.com/gitleaks/gitleaks#installing). The pre-commit hook fails closed without it.
 
-# Auto-fix what can be fixed
-npm fix
+```sh
+pnpm install   # also installs the husky hooks
+pnpm verify    # format:check, lint, typecheck, test:coverage, check:agents
+pnpm fix       # eslint --fix, then prettier --write
 ```
 
-> Works with Node 18+ (recommended LTS).
+## What's enforced
 
----
+| Check                | Tool                                                           | Runs                                                      |
+| -------------------- | -------------------------------------------------------------- | --------------------------------------------------------- |
+| Format               | Prettier                                                       | pre-commit (staged files, writes), pre-push, CI `verify`  |
+| Lint                 | typescript-eslint `strictTypeChecked` + `stylisticTypeChecked` | pre-commit (staged files, `--fix`), pre-push, CI `verify` |
+| Typecheck            | `tsc --noEmit`                                                 | pre-push, CI `verify`                                     |
+| Unit tests, coverage | Vitest, v8; 90% lines/functions/branches/statements            | pre-push, CI `verify`                                     |
+| Commit message       | commitlint (`config-conventional`)                             | commit-msg                                                |
+| Secrets              | gitleaks                                                       | pre-commit (staged); CI `gitleaks` (full history)         |
+| PR title             | commitlint                                                     | CI `pr-title`                                             |
+| Dependency audit     | `pnpm audit --prod --audit-level high`                         | CI `audit`                                                |
+| Agent kit validation | `scripts/check-agents.mjs`                                     | pre-push, CI `verify`                                     |
+| Template self-test   | `pnpm test:template`                                           | CI `template-smoke`                                       |
+| Dependency updates   | Dependabot (npm, github-actions)                               | scheduled                                                 |
+| Releases             | release-please                                                 | on push to `main`                                         |
 
-## Scripts (DX)
+Pre-push runs `pnpm verify`, so it covers every `verify` step.
 
-```json
-{
-  "scripts": {
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "format": "prettier . --write",
-    "format:check": "prettier . --check",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "verify": "pnpm typecheck && pnpm lint && pnpm format:check",
-    "fix": "pnpm lint:fix && pnpm format",
-    "prepare": "husky install"
-  }
-}
+## Scripts
+
+| Script               | Command                                                      |
+| -------------------- | ------------------------------------------------------------ |
+| `pnpm verify`        | format:check, lint, typecheck, test:coverage, check:agents   |
+| `pnpm fix`           | lint:fix, format                                             |
+| `pnpm lint`          | `eslint .`                                                   |
+| `pnpm lint:fix`      | `eslint . --fix`                                             |
+| `pnpm format`        | `prettier . --write`                                         |
+| `pnpm format:check`  | `prettier . --check`                                         |
+| `pnpm typecheck`     | `tsc -p tsconfig.json --noEmit`                              |
+| `pnpm test`          | `vitest run`                                                 |
+| `pnpm test:coverage` | `vitest run --coverage`                                      |
+| `pnpm check:agents`  | validate `agent-kit/.claude` agent files and `settings.json` |
+| `pnpm test:template` | smoke test of the template itself (CI `template-smoke`)      |
+
+## Agent kit (optional)
+
+`agent-kit/` is a portable set of Claude Code config:
+
+- `.claude/agents/`: `implementer`, `qa-engineer`, `reviewer`, `security-auditor`.
+- `.claude/settings.json`: permissions (allow `pnpm`, read-only git and `gitleaks`; ask before push, PR create/merge and `curl`; deny `.env` reads, force push, hard reset, `rm -rf`) and empty commit/PR attribution.
+- `CLAUDE.md`, `AGENTS.md`: orchestration and repo rules.
+- `hooks/no-ai-trailers.sh`: commit-msg hook rejecting AI co-author, session and "Generated with" trailers.
+
+It maps onto the gate: the orchestrator delegates to `implementer`, `qa-engineer` runs `pnpm verify`, `reviewer` reviews before each commit, and the loop repeats until the gate is green. The commit hooks enforce the same rules without the agent.
+
+From a checkout of this repo, point `KIT` at its `agent-kit` directory:
+
+```sh
+export KIT=/path/to/quality-code-starter/agent-kit
 ```
 
-- **`verify`** is your gatekeeper for CI and pre-push hooks.
-- **`fix`** is your daily driver—formats + lint-fixes in one go.
+Then run from the target project root:
 
----
-
-## Project Structure (suggested)
-
+<!-- prettier-ignore-start -->
+<!-- agent-kit-install -->
+```sh
+mkdir -p .claude && cp -R "$KIT/.claude/." .claude/
+cp -n "$KIT/CLAUDE.md" "$KIT/AGENTS.md" .
+mkdir -p .husky && cp "$KIT/hooks/no-ai-trailers.sh" .husky/
+grep -qF no-ai-trailers.sh .husky/commit-msg || printf 'sh .husky/no-ai-trailers.sh "$1"\n' >> .husky/commit-msg
 ```
-.
-├─ src/
-│  ├─ index.ts
-│  └─ ...
-├─ tests/               # Unit/integration tests
-├─ .vscode/             # Editor settings (consistent team DX)
-├─ .prettierrc          # Formatting rules
-├─ eslint.config.mts    # Flat ESLint config (v9+)
-└─ package.json
-```
+<!-- prettier-ignore-end -->
 
----
+- The copy overwrites existing `.claude` settings and agents; back them up first.
+- Requires a husky v8 `.husky/commit-msg` hook with the commitlint line first; the trailer check is appended after it.
+- Review the permissions in `.claude/settings.json` before use.
 
-## Code Quality Stack
+## Using as a template
 
-### ESLint (Flat Config, type-aware)
+1. Click "Use this template" on GitHub.
+2. Change the package name in `package.json`, the holder in `LICENSE`, and the `SECURITY.md` contact. Enable private vulnerability reporting in the repository settings.
+3. Delete `release-as` from `release-please-config.json` after your first release.
+4. Branch protection on `main`: require a PR and the checks `verify`, `pr-title`, `audit`, `gitleaks`, `template-smoke`; squash merge only; linear history.
 
-- Uses `typescript-eslint` strict/stylistic presets.
-- Rules that matter for correctness and readability:
-  - `@typescript-eslint/no-floating-promises`
-  - `@typescript-eslint/explicit-function-return-type`
-  - `@typescript-eslint/prefer-readonly`
-  - Naming conventions and import hygiene
-- **Type-aware**: requires a valid `tsconfig.json` (or `tsconfig.eslint.json`).
+## Workflow
 
-### Prettier
+Changes land through a PR. The squash-merge title is a Conventional Commit (checked by `pr-title`) and becomes the changelog entry via release-please.
 
-- Single source of truth via `.prettierrc` file.
-- **Do not** duplicate Prettier config in `package.json` _and_ `.prettierrc` (pick one; this template uses `.prettierrc`).
+## Limits
 
-### VS Code Settings
-
-- Enforce Prettier on save (no more “it works on my machine” diffs).
-- Organize imports automatically.
-
----
-
-## Recommended Editor Setup
-
-- VS Code + **Prettier** extension (esbenp.prettier-vscode).
-- Enable **Format on Save**.
-- Ensure **ESLint** extension is active.
-
-> The repo includes `.vscode/settings.json` to enforce consistent behavior for the team.
-
----
-
-## Git Hooks (Husky + lint-staged)
-
-We enforce fast local checks and full verification before pushing.
-
-### Install
-
-```bash
-npx husky-init && pnpm i -D lint-staged
-```
-
-This creates `.husky/` and a default hook.
-
-### lint-staged config (`package.json`)
-
-```json
-{
-  "lint-staged": {
-    "*.{ts,tsx,js,json,md,yml,yaml}": ["prettier --write"],
-    "*.{ts,tsx,js}": ["eslint --fix"]
-  }
-}
-```
-
-### Hooks
-
-- **`.husky/pre-commit`**
-
-  ```sh
-  #!/bin/sh
-  . "$(dirname "$0")/_/husky.sh"
-  npx lint-staged
-  ```
-
-- **`.husky/pre-push`**
-  ```sh
-  #!/bin/sh
-  . "$(dirname "$0")/_/husky.sh"
-  pnpm verify
-  ```
-
-### Philosophy
-
-- **Pre-commit** = fast (format + lint only staged files).
-- **Pre-push** = full quality gate (`verify`).
-- **CI** = runs `verify` again (safety net).
-
----
-
-## CI Example (GitHub Actions)
-
-Create `.github/workflows/ci.yml`:
-
-```yaml
-name: CI
-on:
-  pull_request:
-  push:
-    branches: [main]
-
-jobs:
-  verify:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - run: pnpm i --frozen-lockfile
-      - run: pnpm verify
-```
-
----
-
-## Conventions & Best Practices
-
-- **Explicit returns** for exported functions: easier to reason about, safer for public API changes.
-- **Avoid implicit any**—favor strong typing, utility types, and `as const` for literals.
-- **Small modules**: one concern per file. Keep functions pure where possible.
-- **No unused exports**: dead code confuses reviewers and tools.
-- **Log with intent**: temporary logs behind debug flags; `console` treated as warnings in lint rules.
-- **Fail fast** in CI: keep feedback loops tight.
-
----
-
-## QA Notes (what we catch early)
-
-- Unhandled promises and async footguns.
-- Suspicious `any` usage or unsafe member access.
-- Formatting drift that bloats PRs.
-- Inconsistent naming and enum usage.
-- Import/order chaos and accidental circular deps (lint rules can be extended to enforce it).
-
----
-
-## Troubleshooting
-
-- **Type-aware linting is slow/misconfigured**:
-  - Ensure `tsconfig.json` includes only source files (exclude `dist`, `tests` if needed, or create `tsconfig.eslint.json`).
-- **Prettier conflicts with ESLint**:
-  - Keep `eslint-config-prettier` last in the config array.
-  - Avoid `eslint-plugin-prettier` unless you explicitly want Prettier errors surfaced as ESLint errors.
-
----
+- Type-aware lint only covers files in `tsconfig.eslint.json` (`src`, root `*.mts`/`*.cts`). Add new paths there, or lint fails with a parsing error.
+- `.mjs` files are linted without type information.
+- Commits are blocked until gitleaks is on `PATH`.
 
 ## Author
 
-Created with 💡 by [**Rafał Ciesielski**](https://github.com/rciesielski3)
-
-- [LinkedIn](https://www.linkedin.com/in/rafa%C5%82-ciesielski-820309100/)
-- [GitHub](https://github.com/rciesielski3)
-- [Portfolio](https://rciesielski3.github.io/portfolio/)
-
----
+[Rafał Ciesielski](https://github.com/rciesielski3): [LinkedIn](https://www.linkedin.com/in/rafa%C5%82-ciesielski-820309100/), [GitHub](https://github.com/rciesielski3), [Portfolio](https://rciesielski3.github.io/portfolio/)
 
 ## License
 
-MIT License  
-Please credit if you reuse it in your own work 🙌
-
-[☕ Buy Me a Coffee](https://buycoffee.to/adateo)
+[MIT](LICENSE)

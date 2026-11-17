@@ -13,7 +13,7 @@ export default [
     files: ['**/*.{js,mjs,cjs,ts,tsx}'],
   },
   {
-    ignores: ['dist/**', 'node_modules/**', 'package-lock.json'],
+    ignores: ['dist/**', 'node_modules/**', 'coverage/**'],
   },
   {
     languageOptions: {
@@ -48,6 +48,14 @@ export default [
       'no-console': 'warn',
       'require-await': 'off',
       camelcase: 'off',
+    },
+  },
+  {
+    files: ['**/*.mjs'],
+    ...tseslint.configs.disableTypeChecked,
+    rules: {
+      ...tseslint.configs.disableTypeChecked.rules,
+      '@typescript-eslint/explicit-function-return-type': 'off',
     },
   },
 ];

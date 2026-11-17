@@ -1,42 +1,50 @@
 {
   "name": "quality-code-starter",
   "version": "1.0.0",
-  "main": "index.js",
+  "private": true,
+  "description": "Strict TypeScript starter with ESLint, Prettier, and git hooks wired for a single verify gate.",
+  "license": "MIT",
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "verify": "npm run typecheck && npm run lint && npm run format:check",
-    "fix": "npm run lint:fix && npm run format",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "check:agents": "node scripts/check-agents.mjs",
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm check:agents",
+    "test:template": "bash scripts/template-smoke.sh",
+    "fix": "pnpm lint:fix && pnpm format",
     "prepare": "husky install"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "lint-staged": {
-    "*.{ts,tsx,js,json,md,yml,yaml}": [
+    "*.{ts,tsx,js,mjs,cjs,mts,cts,json,md,yml,yaml}": [
       "prettier --write"
     ],
-    "*.{ts,tsx,js}": [
+    "*.{ts,tsx,js,mjs,cjs,mts,cts}": [
       "eslint --fix"
     ]
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
     "@eslint/js": "^9.33.0",
-    "@types/node": "^24.3.1",
-    "@typescript-eslint/eslint-plugin": "^8.39.1",
-    "@typescript-eslint/parser": "^8.39.1",
+    "@types/node": "^22.0.0",
+    "@vitest/coverage-v8": "^5.1.0",
     "eslint": "^9.33.0",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-react": "^7.37.5",
     "globals": "^16.3.0",
     "husky": "^8.0.0",
     "jiti": "^2.5.1",
     "lint-staged": "^15.5.2",
     "prettier": "^3.6.2",
-    "typescript-eslint": "^8.39.1"
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.39.1",
+    "vitest": "^5.1.0"
   }
 }
