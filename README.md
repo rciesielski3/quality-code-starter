@@ -21,71 +21,72 @@ pnpm fix       # eslint --fix, then prettier --write
 
 ## What's enforced
 
-| Check                | Tool                                                           | Runs                                                      |
-| -------------------- | -------------------------------------------------------------- | --------------------------------------------------------- |
-| Format               | Prettier                                                       | pre-commit (staged files, writes), pre-push, CI `verify`  |
-| Lint                 | typescript-eslint `strictTypeChecked` + `stylisticTypeChecked` | pre-commit (staged files, `--fix`), pre-push, CI `verify` |
-| Typecheck            | `tsc --noEmit`                                                 | pre-push, CI `verify`                                     |
-| Unit tests, coverage | Vitest, v8; 90% lines/functions/branches/statements            | pre-push, CI `verify`                                     |
-| Commit message       | commitlint (`config-conventional`)                             | commit-msg                                                |
-| Secrets              | gitleaks                                                       | pre-commit (staged); CI `gitleaks` (full history)         |
-| PR title             | commitlint                                                     | CI `pr-title`                                             |
-| Dependency audit     | `pnpm audit --prod --audit-level high`                         | CI `audit`                                                |
-| Agent kit validation | `scripts/check-agents.mjs`                                     | pre-push, CI `verify`                                     |
-| Template self-test   | `pnpm test:template`                                           | CI `template-smoke`                                       |
-| Dependency updates   | Dependabot (npm minor/patch, github-actions)                   | scheduled                                                 |
-| Releases             | release-please                                                 | on push to `main`                                         |
+| Check                  | Tool                                                           | Runs                                                      |
+| ---------------------- | -------------------------------------------------------------- | --------------------------------------------------------- |
+| Format                 | Prettier                                                       | pre-commit (staged files, writes), pre-push, CI `verify`  |
+| Lint                   | typescript-eslint `strictTypeChecked` + `stylisticTypeChecked` | pre-commit (staged files, `--fix`), pre-push, CI `verify` |
+| Typecheck              | `tsc --noEmit`                                                 | pre-push, CI `verify`                                     |
+| Unit tests, coverage   | Vitest, v8; 90% lines/functions/branches/statements            | pre-push, CI `verify`                                     |
+| Commit message         | commitlint (`config-conventional`)                             | commit-msg                                                |
+| No AI trailers         | `.claude/hooks/no-ai-trailers.sh`                              | commit-msg                                                |
+| Secrets                | gitleaks                                                       | pre-commit (staged); CI `gitleaks` (full history)         |
+| PR title               | commitlint                                                     | CI `pr-title`                                             |
+| Dependency audit       | `pnpm audit --prod --audit-level high`                         | CI `audit`                                                |
+| Agent setup validation | `scripts/check-agents.mjs`                                     | pre-push, CI `verify`                                     |
+| Template self-test     | `pnpm test:template`                                           | CI `template-smoke`                                       |
+| Dependency updates     | Dependabot (npm minor/patch, github-actions)                   | scheduled                                                 |
+| Releases               | release-please                                                 | on push to `main`                                         |
 
 Pre-push runs `pnpm verify`, so it covers every `verify` step.
 
 ## Scripts
 
-| Script               | Command                                                      |
-| -------------------- | ------------------------------------------------------------ |
-| `pnpm verify`        | format:check, lint, typecheck, test:coverage, check:agents   |
-| `pnpm fix`           | lint:fix, format                                             |
-| `pnpm lint`          | `eslint .`                                                   |
-| `pnpm lint:fix`      | `eslint . --fix`                                             |
-| `pnpm format`        | `prettier . --write`                                         |
-| `pnpm format:check`  | `prettier . --check`                                         |
-| `pnpm typecheck`     | `tsc -p tsconfig.json --noEmit`                              |
-| `pnpm test`          | `vitest run`                                                 |
-| `pnpm test:coverage` | `vitest run --coverage`                                      |
-| `pnpm check:agents`  | validate `agent-kit/.claude` agent files and `settings.json` |
-| `pnpm test:template` | smoke test of the template itself (CI `template-smoke`)      |
+| Script               | Command                                                               |
+| -------------------- | --------------------------------------------------------------------- |
+| `pnpm verify`        | format:check, lint, typecheck, test:coverage, check:agents            |
+| `pnpm fix`           | lint:fix, format                                                      |
+| `pnpm lint`          | `eslint .`                                                            |
+| `pnpm lint:fix`      | `eslint . --fix`                                                      |
+| `pnpm format`        | `prettier . --write`                                                  |
+| `pnpm format:check`  | `prettier . --check`                                                  |
+| `pnpm typecheck`     | `tsc -p tsconfig.json --noEmit`                                       |
+| `pnpm test`          | `vitest run`                                                          |
+| `pnpm test:coverage` | `vitest run --coverage`                                               |
+| `pnpm check:agents`  | validate `.claude` agents, `settings.json` and the `AGENTS.md` roster |
+| `pnpm test:template` | smoke test of the template itself (CI `template-smoke`)               |
 
-## Agent kit (optional)
+## Agent setup
 
-`agent-kit/` is a portable set of Claude Code config:
+The Claude Code setup lives at the repo root and is meant to be reused in other projects:
 
-- `.claude/agents/`: `implementer`, `qa-engineer`, `reviewer`, `security-auditor`.
-- `.claude/settings.json`: permissions (allow `pnpm`, read-only git and `gitleaks`; ask before push, PR create/merge and `curl`; deny `.env` reads, force push, hard reset, `rm -rf`) and empty commit/PR attribution.
-- `CLAUDE.md`, `AGENTS.md`: orchestration and repo rules.
-- `agent-kit/hooks/no-ai-trailers.sh`: commit-msg hook rejecting Claude co-author, session and "Generated with" trailers.
+- `CLAUDE.md`: how to work (orchestration loop, workflow, repo policy, commits, gate).
+- `AGENTS.md`: the agent roster (`implementer`, `qa-engineer`, `reviewer`, `security-auditor`) and project facts.
+- `.claude/`: `settings.json` (permissions and empty commit/PR attribution), `agents/`, and `hooks/no-ai-trailers.sh` (commit-msg hook rejecting Claude co-author, session and "Generated with" trailers).
 
-It maps onto the gate: the orchestrator delegates to `implementer`, `qa-engineer` runs `pnpm verify`, `reviewer` reviews before each commit, and the loop repeats until the gate is green. The commit hooks enforce the same rules without the agent.
+It maps onto the gate: the orchestrator delegates to `implementer`, `qa-engineer` runs `pnpm verify`, `reviewer` reviews before each commit and the PR, and the loop repeats until the gate is green. The husky hooks enforce the same rules without the agent, and `pnpm check:agents` keeps agent files, `settings.json` and the `AGENTS.md` roster in sync.
 
-From a checkout of this repo, point `KIT` at its `agent-kit` directory:
+`.claude/settings.local.json` and `CLAUDE.local.md` are gitignored personal overrides.
+
+To install into another project, use a clean checkout (or `git archive` output) of this repo as `KIT`, so no local files are copied:
 
 ```sh
-export KIT=/path/to/quality-code-starter/agent-kit
+export KIT=/path/to/checkout
 ```
 
 Then run from the target project root:
 
 <!-- prettier-ignore-start -->
-<!-- agent-kit-install -->
+<!-- agent-setup-install -->
 ```sh
 mkdir -p .claude && cp -R "$KIT/.claude/." .claude/
 cp -n "$KIT/CLAUDE.md" "$KIT/AGENTS.md" .
-mkdir -p .husky && cp "$KIT/hooks/no-ai-trailers.sh" .husky/
-grep -qF no-ai-trailers.sh .husky/commit-msg || printf 'sh .husky/no-ai-trailers.sh "$1"\n' >> .husky/commit-msg
+grep -qF no-ai-trailers.sh .husky/commit-msg || printf 'sh .claude/hooks/no-ai-trailers.sh "$1"\n' >> .husky/commit-msg
 ```
 <!-- prettier-ignore-end -->
 
-- The copy overwrites existing `.claude` settings and agents; back them up first.
+- The copy overwrites existing `.claude` settings and agents; back them up first. `CLAUDE.md` and `AGENTS.md` are not overwritten (`cp -n`).
 - Requires a husky v8 `.husky/commit-msg` hook with the commitlint line first; the trailer check is appended after it.
-- Review the permissions in `.claude/settings.json` before use.
+- Edit `AGENTS.md` for the target project and review the permissions in `.claude/settings.json` before use.
 
 ## Using as a template
 
