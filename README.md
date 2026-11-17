@@ -33,7 +33,7 @@ pnpm fix       # eslint --fix, then prettier --write
 | Dependency audit     | `pnpm audit --prod --audit-level high`                         | CI `audit`                                                |
 | Agent kit validation | `scripts/check-agents.mjs`                                     | pre-push, CI `verify`                                     |
 | Template self-test   | `pnpm test:template`                                           | CI `template-smoke`                                       |
-| Dependency updates   | Dependabot (npm, github-actions)                               | scheduled                                                 |
+| Dependency updates   | Dependabot (npm minor/patch, github-actions)                   | scheduled                                                 |
 | Releases             | release-please                                                 | on push to `main`                                         |
 
 Pre-push runs `pnpm verify`, so it covers every `verify` step.
@@ -61,7 +61,7 @@ Pre-push runs `pnpm verify`, so it covers every `verify` step.
 - `.claude/agents/`: `implementer`, `qa-engineer`, `reviewer`, `security-auditor`.
 - `.claude/settings.json`: permissions (allow `pnpm`, read-only git and `gitleaks`; ask before push, PR create/merge and `curl`; deny `.env` reads, force push, hard reset, `rm -rf`) and empty commit/PR attribution.
 - `CLAUDE.md`, `AGENTS.md`: orchestration and repo rules.
-- `hooks/no-ai-trailers.sh`: commit-msg hook rejecting AI co-author, session and "Generated with" trailers.
+- `agent-kit/hooks/no-ai-trailers.sh`: commit-msg hook rejecting Claude co-author, session and "Generated with" trailers.
 
 It maps onto the gate: the orchestrator delegates to `implementer`, `qa-engineer` runs `pnpm verify`, `reviewer` reviews before each commit, and the loop repeats until the gate is green. The commit hooks enforce the same rules without the agent.
 
@@ -91,7 +91,7 @@ grep -qF no-ai-trailers.sh .husky/commit-msg || printf 'sh .husky/no-ai-trailers
 
 1. Click "Use this template" on GitHub.
 2. Change the package name in `package.json`, the holder in `LICENSE`, and the `SECURITY.md` contact. Enable private vulnerability reporting in the repository settings.
-3. Delete `release-as` from `release-please-config.json` after your first release.
+3. Reset `.release-please-manifest.json` and `package.json` to your starting version, and delete `release-as` from `release-please-config.json` after your first release.
 4. Branch protection on `main`: require a PR and the checks `verify`, `pr-title`, `audit`, `gitleaks`, `template-smoke`; squash merge only; linear history.
 
 ## Workflow
