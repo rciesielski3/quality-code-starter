@@ -65,21 +65,36 @@ expect_fail "gitleaks blocks staged secret" "leaks found" \
 git reset -q leaked.txt
 rm -f leaked.txt
 
-echo "== agent kit"
+echo "== commit-msg: no-ai-trailers"
+expect_fail "repo hook rejects Claude co-author trailer" "no-ai-trailers: rejected" \
+  git commit --allow-empty -m "feat: add thing" -m "Co-Authored-By: Claude <noreply@anthropic.com>"
+
+echo "== agent setup install"
 [ -f "$README" ] || die "README not found: $README"
-marker=$(grep -n -F -x '<!-- agent-kit-install -->' "$README" | head -n1 | cut -d: -f1 || true)
-[ -n "$marker" ] || die "marker '<!-- agent-kit-install -->' missing in $README"
+marker=$(grep -n -F -x '<!-- agent-setup-install -->' "$README" | head -n1 | cut -d: -f1 || true)
+[ -n "$marker" ] || die "marker '<!-- agent-setup-install -->' missing in $README"
 tail -n +"$((marker + 1))" "$README" | awk '
   !started { if ($0 ~ /^```sh[[:space:]]*$/) { started = 1; found = 1; next } else { exit } }
   /^```[[:space:]]*$/ { exit }
   { print }
   END { if (!found) exit 3 }
-' >"$TMP/kit-install.sh" || die "no \`\`\`sh block directly after the agent-kit-install marker"
-[ -s "$TMP/kit-install.sh" ] || die "agent-kit install block is empty"
-export KIT="$PROJECT/agent-kit"
-if bash -euo pipefail "$TMP/kit-install.sh"; then pass "agent kit install commands"; else die "agent kit install commands"; fi
-expect_fail "kit rejects Claude co-author trailer" "no-ai-trailers: rejected" \
-  git commit --allow-empty -m "feat: add thing" -m "Co-Authored-By: Claude <noreply@anthropic.com>"
+' >"$TMP/install.sh" || die "no \`\`\`sh block directly after the agent-setup-install marker"
+[ -s "$TMP/install.sh" ] || die "agent setup install block is empty"
+TARGET="$TMP/target"
+mkdir -p "$TARGET/.husky"
+printf '#!/bin/sh\n' >"$TARGET/.husky/commit-msg"
+export KIT="$PROJECT"
+cd "$TARGET"
+if bash -euo pipefail "$TMP/install.sh"; then pass "agent setup install commands"; else die "agent setup install commands"; fi
+for f in .claude/settings.json CLAUDE.md AGENTS.md; do
+  if [ -f "$TARGET/$f" ]; then pass "target has $f"; else fail "target has $f"; fi
+done
+printf 'feat: add thing\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n' >"$TMP/bad-msg"
+printf 'feat: add thing\n' >"$TMP/good-msg"
+expect_fail "installed hook rejects Claude co-author trailer" "no-ai-trailers: rejected" \
+  sh .husky/commit-msg "$TMP/bad-msg"
+if sh .husky/commit-msg "$TMP/good-msg"; then pass "installed hook accepts clean message"; else fail "installed hook accepts clean message"; fi
+cd "$PROJECT"
 
 echo "== valid commit"
 if out=$(git commit --allow-empty -m "feat: add thing" 2>&1); then

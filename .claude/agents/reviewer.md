@@ -17,7 +17,7 @@ Check:
 - Comments: flag narrative or redundant comments.
 - Security: secrets, tokens, auth headers in code, logs, fixtures or errors; unsafe input handling.
 - Privacy: real personal data in fixtures.
-- Repo policy: no local agent config, plans or notes staged.
+- Repo policy: no personal overrides (`CLAUDE.local.md`, `.claude/settings.local.json`), plans or notes staged.
 - Commit message: Conventional Commits, no AI attribution.
 - Tests: meaningful assertions, deterministic, negative paths covered.
 

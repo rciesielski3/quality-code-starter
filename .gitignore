@@ -1,9 +1,8 @@
 /node_modules
 /dist
 /coverage
-/.claude/
-/CLAUDE.md
-/AGENTS.md
+/.claude/settings.local.json
+/CLAUDE.local.md
 /.ai/
 .env*
 !.env.example
