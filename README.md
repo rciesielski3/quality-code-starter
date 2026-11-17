@@ -91,9 +91,10 @@ grep -qF no-ai-trailers.sh .husky/commit-msg || printf 'sh .claude/hooks/no-ai-t
 ## Using as a template
 
 1. Click "Use this template" on GitHub.
-2. Change the package name in `package.json`, the holder in `LICENSE`, and the `SECURITY.md` contact. Enable private vulnerability reporting in the repository settings.
-3. Reset `.release-please-manifest.json` and `package.json` to your starting version, and delete `release-as` from `release-please-config.json` after your first release.
-4. Branch protection on `main`: require a PR and the checks `verify`, `pr-title`, `audit`, `gitleaks`, `template-smoke`; squash merge only; linear history.
+2. Replace `rciesielski3/quality-code-starter` with your repository in the README badges and in the advisory link in `SECURITY.md`, then change the package name in `package.json` and the holder in `LICENSE`.
+3. Delete `CHANGELOG.md` and reset `.release-please-manifest.json` and `package.json` to your starting version.
+4. In the repository settings: enable private vulnerability reporting, and allow GitHub Actions to create pull requests (Settings → Actions → General); release-please needs it.
+5. Branch protection on `main`: require a PR and the checks `verify`, `pr-title`, `audit`, `gitleaks`, `template-smoke`; squash merge only; linear history. release-please PRs do not trigger CI, so merge them as an admin.
 
 ## Workflow
 
@@ -107,7 +108,7 @@ Changes land through a PR. The squash-merge title is a Conventional Commit (chec
 
 ## Author
 
-[Rafał Ciesielski](https://github.com/rciesielski3): [LinkedIn](https://www.linkedin.com/in/rafa%C5%82-ciesielski-820309100/), [GitHub](https://github.com/rciesielski3), [Portfolio](https://rciesielski3.github.io/portfolio/)
+[Rafał Ciesielski](https://rciesielski3.github.io/portfolio/) · [LinkedIn](https://www.linkedin.com/in/rafa%C5%82-ciesielski-820309100/)
 
 ## License
 
