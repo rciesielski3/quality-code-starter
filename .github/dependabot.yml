@@ -6,6 +6,10 @@ updates:
       interval: weekly
     commit-message:
       prefix: build(deps)
+    ignore:
+      - dependency-name: '*'
+        update-types:
+          - version-update:semver-major
     groups:
       minor-and-patch:
         update-types:
