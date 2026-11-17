@@ -18,6 +18,7 @@
     "test:coverage": "vitest run --coverage",
     "check:agents": "node scripts/check-agents.mjs",
     "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm check:agents",
+    "test:template": "bash scripts/template-smoke.sh",
     "fix": "pnpm lint:fix && pnpm format",
     "prepare": "husky install"
   },
