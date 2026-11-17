@@ -50,4 +50,12 @@ export default [
       camelcase: 'off',
     },
   },
+  {
+    files: ['**/*.mjs'],
+    ...tseslint.configs.disableTypeChecked,
+    rules: {
+      ...tseslint.configs.disableTypeChecked.rules,
+      '@typescript-eslint/explicit-function-return-type': 'off',
+    },
+  },
 ];

@@ -16,7 +16,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:coverage",
+    "check:agents": "node scripts/check-agents.mjs",
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm check:agents",
     "fix": "pnpm lint:fix && pnpm format",
     "prepare": "husky install"
   },
