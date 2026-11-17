@@ -1,6 +1,6 @@
 {
   "name": "quality-code-starter",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "description": "Strict TypeScript starter with ESLint, Prettier, and git hooks wired for a single verify gate.",
   "license": "MIT",
