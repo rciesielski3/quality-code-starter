@@ -13,7 +13,7 @@ export default [
     files: ['**/*.{js,mjs,cjs,ts,tsx}'],
   },
   {
-    ignores: ['dist/**', 'node_modules/**', 'package-lock.json'],
+    ignores: ['dist/**', 'node_modules/**', 'coverage/**'],
   },
   {
     languageOptions: {
