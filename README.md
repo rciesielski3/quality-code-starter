@@ -61,7 +61,7 @@ Pre-push runs `pnpm verify`, so it covers every `verify` step.
 - `.claude/agents/`: `implementer`, `qa-engineer`, `reviewer`, `security-auditor`.
 - `.claude/settings.json`: permissions (allow `pnpm`, read-only git and `gitleaks`; ask before push, PR create/merge and `curl`; deny `.env` reads, force push, hard reset, `rm -rf`) and empty commit/PR attribution.
 - `CLAUDE.md`, `AGENTS.md`: orchestration and repo rules.
-- `hooks/no-ai-trailers.sh`: commit-msg hook rejecting Claude co-author, session and "Generated with" trailers.
+- `agent-kit/hooks/no-ai-trailers.sh`: commit-msg hook rejecting Claude co-author, session and "Generated with" trailers.
 
 It maps onto the gate: the orchestrator delegates to `implementer`, `qa-engineer` runs `pnpm verify`, `reviewer` reviews before each commit, and the loop repeats until the gate is green. The commit hooks enforce the same rules without the agent.
 
