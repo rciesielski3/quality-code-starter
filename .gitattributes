@@ -1,0 +1,4 @@
+# Keep GitHub language stats honest: hooks/scripts are tooling, not the project language
+.husky/* linguist-vendored
+.claude/** linguist-vendored
+scripts/*.sh linguist-vendored
